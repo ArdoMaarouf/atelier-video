@@ -1,1 +1,896 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier Vidéo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #fafafa; color: #1a1a1a; padding: 1rem; padding-bottom: 6rem; max-width: 900px; margin: 0 auto; font-size: 15px; }
+h1 { font-size: 1.4rem; text-align: center; margin-bottom: 0.3rem; }
+.subtitle { text-align: center; color: #777; font-size: 0.85rem; margin-bottom: 1.5rem; font-style: italic; }
+.banner { background: #eef4ff; border-left: 3px solid #4a6cf7; padding: 0.7rem 0.9rem; border-radius: 8px; font-size: 0.8rem; margin-bottom: 1rem; line-height: 1.4; }
+.panel { background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+.panel.ok { border-color: #2d8a4e; }
+.api-input { width: 100%; padding: 0.85rem; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 0.85rem; margin-bottom: 0.6rem; font-family: monospace; }
+  .btn-save { width: 100%; padding: 0.8rem; border: none; border-radius: 8px; background: #1a1a1a; color: #fff; font-size: 0.9rem; font-weight: 600; cursor: pointer; margin-bottom: 0.6rem; }
+.status-line { font-size: 0.75rem; padding: 0.55rem; border-radius: 6px; background: #f5f5f5; color: #777; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.status-line.ok { background: #e3f5e9; color: #2d8a4e; font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+.status-line.ok .dot { background: #2d8a4e; }
+.hint { font-size: 0.72rem; color: #777; margin-top: 0.4rem; }
+.hint a { color: #1a1a1a; }
+.wake { font-size: 0.72rem; padding: 0.5rem; border-radius: 6px; background: #eef4ff; color: #4a6cf7; display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.4rem; }
+.wake.active { background: #e3f5e9; color: #2d8a4e; }
+.wake button { background: transparent; border: 1px solid currentColor; color: inherit; padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.68rem; cursor: pointer; font-family: inherit; }
+  .upload-zone { text-align: center; cursor: pointer; padding: 2rem 1rem; border: 2px dashed #e5e5e5; background: #fff; border-radius: 12px; margin-bottom: 1rem; }
+.upload-zone:active { border-color: #1a1a1a; }
+.upload-zone input { display: none; }
+.upload-icon { font-size: 2rem; opacity: 0.6; }
+.upload-text { font-size: 0.95rem; margin-top: 0.5rem; }
+.upload-hint { font-size: 0.75rem; color: #777; margin-top: 0.2rem; }
+.images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
+.image-card { position: relative; aspect-ratio: 9/16; border-radius: 8px; overflow: hidden; border: 1px solid #e5e5e5; background: #f0f0f0; }
+.image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.remove-btn { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.7); color: #fff; border: none; font-size: 10px; cursor: pointer; line-height: 1; }
+  .section-title { font-size: 0.72rem; font-weight: 600; color: #777; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem; }
+textarea { width: 100%; padding: 0.75rem; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 0.88rem; font-family: inherit; min-height: 90px; resize: vertical; line-height: 1.5; }
+textarea:focus { outline: none; border-color: #1a1a1a; }
+.presets { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.preset { padding: 0.35rem 0.7rem; border-radius: 16px; border: 1px solid #e5e5e5; background: #f5f5f5; font-size: 0.72rem; cursor: pointer; }
+.preset:active { transform: scale(0.96); }
+.styles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+.style-card { padding: 0.6rem 0.7rem; border-radius: 8px; border: 1px solid #e5e5e5; background: #f5f5f5; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+.style-card:active { transform: scale(0.98); }
+.style-card.selected { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+.style-emoji { font-size: 1.1rem; flex-shrink: 0; }
+.style-name { font-weight: 500; line-height: 1.2; }
+  .cat-header { grid-column: 1 / -1; font-size: 0.7rem; font-weight: 600; color: #777; text-transform: uppercase; padding: 0.6rem 0 0.3rem; border-bottom: 1px solid #e5e5e5; margin-bottom: 0.3rem; }
+.cat-desc { grid-column: 1 / -1; font-size: 0.68rem; color: #777; font-style: italic; margin-bottom: 0.4rem; }
+.no-effect { grid-column: 1 / -1; padding: 0.7rem; border-radius: 8px; border: 2px dashed #e5e5e5; text-align: center; cursor: pointer; font-size: 0.8rem; color: #777; }
+.no-effect.selected { border-color: #1a1a1a; border-style: solid; background: #f5f5f5; color: #1a1a1a; font-weight: 600; }
+.control-label { display: block; font-size: 0.72rem; color: #777; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+select { width: 100%; padding: 0.7rem; border: 1px solid #e5e5e5; border-radius: 8px; font-size: 0.88rem; font-family: inherit; background: #fafafa; }
+select:focus { outline: none; border-color: #1a1a1a; }
+.btn-main { width: 100%; padding: 1rem; border: none; border-radius: 12px; background: #1a1a1a; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; margin-bottom: 1rem; transition: opacity 0.2s; }
+.btn-main:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-stop { width: 100%; padding: 0.8rem; border: 1px solid #e5e5e5; border-radius: 12px; background: #fff; color: #c0392b; font-weight: 600; cursor: pointer; margin-bottom: 1rem; display: none; font-family: inherit; }
+  .queue-summary { background: #fff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; font-size: 0.78rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.4rem; }
+.queue-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.8rem; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 0.4rem; background: #fff; font-size: 0.82rem; transition: border-color 0.3s; }
+.queue-item.pending { opacity: 0.5; }
+.queue-item.creating { border-color: #d4a017; }
+.queue-item.processing { border-color: #1a1a1a; }
+.queue-item.done { border-color: #2d8a4e; }
+.queue-item.failed { border-color: #c0392b; }
+.q-icon { width: 1.5rem; text-align: center; flex-shrink: 0; }
+.q-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-status { font-size: 0.72rem; color: #777; text-align: right; flex-shrink: 0; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue-more { text-align: center; padding: 0.5rem; color: #777; font-size: 0.75rem; font-style: italic; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.8rem; }
+.gallery-item { border-radius: 12px; overflow: hidden; border: 1px solid #e5e5e5; background: #000; }
+.gallery-item video { width: 100%; display: block; aspect-ratio: 9/16; object-fit: cover; }
+.g-caption { padding: 0.4rem 0.6rem; background: #fff; font-size: 0.7rem; color: #777; }
+  .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; color: #fff; padding: 0.7rem 1rem; font-size: 0.78rem; display: flex; align-items: center; gap: 0.6rem; transform: translateY(100%); transition: transform 0.3s; z-index: 100; }
+.status-bar.visible { transform: translateY(0); }
+.spinner { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.toast { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%) translateY(-100px); background: #2d8a4e; color: #fff; padding: 0.85rem 1.4rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1000; opacity: 0; transition: transform 0.35s, opacity 0.35s; max-width: 90vw; text-align: center; }
+.toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.error { background: #c0392b; }
+.toast.warn { background: #d4a017; }
+#noSleepCanvas, #noSleepVideo { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0.01; pointer-events: none; z-index: -1; }
+</style>
+</head>
+<body><h1>Atelier Vidéo</h1>
+<p class="subtitle">Vos images prolongées en vidéo</p>
+<div class="banner">
+<strong>Comment ça marche :</strong> Ajoutez vos images, écrivez votre vision (ou choisissez un effet), c'est parti. Chaque vidéo est la prolongation animée de votre image — même sujet, même composition, juste le mouvement, la lumière et l'ambiance en plus. Format portrait 9:16.
+</div>
 
+<div class="panel" id="api-panel">
+<input type="password" class="api-input" id="api-key-input" placeholder="Collez votre clé API ici (sk-...)" autocomplete="off">
+<button class="btn-save" id="api-save-btn">Enregistrer la clé</button>
+<div class="status-line" id="api-status-line">
+<span class="dot"></span>
+<span id="api-status-text">Aucune clé API enregistrée</span>
+</div>
+<div class="hint">Clé gratuite sur <a href="https://platform.agnes-ai.com" target="_blank">platform.agnes-ai.com</a> → Settings → API Keys</div>
+<div class="wake" id="wake-status">
+<span id="wake-text">💤 Veille automatique</span>
+<button id="wake-btn">Garder l'écran allumé</button>
+</div>
+</div>
+  <div class="upload-zone" id="upload-zone">
+<input type="file" id="file-input" accept="image/*" multiple>
+<div class="upload-icon">＋</div>
+<div class="upload-text">Ajoutez vos images</div>
+<div class="upload-hint">Autant que vous voulez — chacune deviendra une vidéo</div>
+</div>
+
+<div class="images-grid" id="images-grid"></div>
+
+<div class="panel">
+<div class="section-title">✍️ Votre vision (optionnel)</div>
+<textarea id="main-prompt" placeholder="Décrivez ce que vous voulez pour TOUTES vos images. Ex: Anime doucement chaque image, la lumière est chaude et dorée, garde chaque sujet identique à la photo."></textarea>
+<div class="presets" id="presets"></div>
+</div>
+  <div class="panel">
+<div class="section-title">🎨 Effet visuel (optionnel)</div>
+<div class="styles-grid" id="styles-grid"></div>
+</div>
+
+<div class="panel">
+<div class="section-title">📷 Réglages techniques</div>
+<label class="control-label">Durée de chaque vidéo</label>
+<select id="duration-select">
+<option value="121">5 secondes</option>
+<option value="153" selected>6,4 secondes (recommandé)</option>
+<option value="241">10 secondes</option>
+</select>
+<div style="height:0.6rem;"></div>
+<label class="control-label">Cadrage</label>
+<select id="framing-select">
+<option value="random">Aléatoire</option>
+<option value="close">Très serré (gros plan)</option>
+<option value="medium">Moyen (buste)</option>
+<option value="wide">Large (plan large)</option>
+</select>
+<div style="height:0.6rem;"></div>
+<label class="control-label">Intensité du mouvement</label>
+<select id="intensity-select">
+<option value="random">Aléatoire</option>
+<option value="subtle">Subtile</option>
+<option value="moderate">Modérée</option>
+<option value="strong">Forte</option>
+</select>
+</div>
+  <button class="btn-main" id="generate-btn" disabled>Créer les vidéos</button>
+<button class="btn-stop" id="stop-btn">⏹ Arrêter la génération</button>
+
+<div id="queue"></div>
+
+<div id="gallery" style="display:none; margin-top:1.5rem;">
+<div class="section-title">Vidéos générées</div>
+<div class="gallery-grid" id="gallery-grid"></div>
+</div>
+
+<div class="status-bar" id="status-bar">
+<div class="spinner"></div>
+<span id="status-text">Préparation…</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<canvas id="noSleepCanvas" width="2" height="2"></canvas>
+<video id="noSleepVideo" playsinline muted loop></video>
+
+<script>
+  const API_BASE = 'https://apihub.agnes-ai.com/v1';
+const POLL_BASE = 'https://apihub.agnes-ai.com/agnesapi';
+const MODEL_VIDEO = 'agnes-video-v2.0';
+const FRAME_RATE = 24;
+let createIntervalMs = 62000;
+const INTERVAL_MIN = 62000;
+const INTERVAL_MAX = 90000;
+const INTERVAL_SAFE = 75000;
+const POLL_INTERVAL_SEC = 8;
+const MAX_POLL_ATTEMPTS = 100;
+const TIMING_KEY = 'agnes_timing_v12';
+const API_KEY_STORAGE = 'agnes_api_key';
+const WAKE_PREF = 'agnes_wake';
+const MAX_VISIBLE_QUEUE = 30;
+const MAX_IMAGE_SIZE = 12 * 1024 * 1024;
+const THUMB_WIDTH = 200;
+
+let toastTimeout = null;
+function showToast(msg, type, duration) {
+type = type || 'success';
+duration = duration || 2500;
+const el = document.getElementById('toast');
+if (!el) return;
+el.textContent = msg;
+el.classList.remove('error', 'warn');
+if (type === 'error') el.classList.add('error');
+else if (type === 'warn') el.classList.add('warn');
+el.classList.add('visible');
+if (toastTimeout) clearTimeout(toastTimeout);
+toastTimeout = setTimeout(function() { el.classList.remove('visible'); }, duration);
+  }
+  
+  let wakeLockSentinel = null;
+let wakeEnabled = false;
+let canvasStream = null;
+let canvasInterval = null;
+
+function isWakeSupported() {
+return 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function';
+}
+
+async function startWakeLock() {
+let ok = false;
+if (isWakeSupported()) {
+try {
+wakeLockSentinel = await navigator.wakeLock.request('screen');
+wakeLockSentinel.addEventListener('release', function() { wakeLockSentinel = null; updateWakeUI(); });
+ok = true;
+} catch (e) {}
+}
+if (!ok) {
+ok = startCanvasStream();
+}
+return ok;
+}
+
+function startCanvasStream() {
+if (canvasStream) return true;
+try {
+const canvas = document.getElementById('noSleepCanvas');
+const video = document.getElementById('noSleepVideo');
+if (!canvas || !video || typeof canvas.captureStream !== 'function') return false;
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#000';
+ctx.fillRect(0, 0, 2, 2);
+canvasStream = canvas.captureStream(1);
+let toggle = false;
+canvasInterval = setInterval(function() {
+toggle = !toggle;
+ctx.fillStyle = toggle ? '#000' : '#010101';
+ctx.fillRect(0, 0, 2, 2);
+}, 1000);
+video.srcObject = canvasStream;
+video.muted = true;
+video.play().catch(function() {});
+return true;
+} catch (e) { return false; }
+  }function stopCanvasStream() {
+if (canvasInterval) { clearInterval(canvasInterval); canvasInterval = null; }
+const video = document.getElementById('noSleepVideo');
+if (video) { try { video.pause(); video.srcObject = null; } catch (e) {} }
+if (canvasStream) { try { canvasStream.getTracks().forEach(function(t) { t.stop(); }); } catch (e) {} canvasStream = null; }
+}
+
+async function stopWakeLock() {
+if (wakeLockSentinel) { try { await wakeLockSentinel.release(); } catch (e) {} wakeLockSentinel = null; }
+stopCanvasStream();
+}
+
+function updateWakeUI() {
+const el = document.getElementById('wake-status');
+const txt = document.getElementById('wake-text');
+const btn = document.getElementById('wake-btn');
+if (!el || !txt || !btn) return;
+const active = wakeLockSentinel !== null || canvasStream !== null;
+el.classList.toggle('active', wakeEnabled && active);
+if (wakeEnabled && active) { txt.textContent = '✅ Écran allumé'; btn.textContent = 'Désactiver'; }
+else if (wakeEnabled) { txt.textContent = '⏳ En attente'; btn.textContent = 'Désactiver'; }
+else { txt.textContent = '💤 Veille auto'; btn.textContent = 'Garder allumé'; }
+}
+
+async function toggleWake() {
+if (wakeEnabled) {
+wakeEnabled = false;
+await stopWakeLock();
+try { localStorage.setItem(WAKE_PREF, '0'); } catch (e) {}
+showToast('Veille automatique', 'warn');
+} else {
+wakeEnabled = true;
+const ok = await startWakeLock();
+try { localStorage.setItem(WAKE_PREF, '1'); } catch (e) {}
+showToast(ok ? 'Écran maintenu allumé' : 'Non supporté', ok ? 'success' : 'warn');
+}
+updateWakeUI();
+}
+
+document.addEventListener('visibilitychange', async function() {
+if (document.visibilityState === 'visible' && wakeEnabled && !wakeLockSentinel && !canvasStream) {
+await startWakeLock();
+updateWakeUI();
+}
+});
+  
+function loadTiming() { try { return JSON.parse(localStorage.getItem(TIMING_KEY) || '{}'); } catch (e) { return {}; } }
+function saveTiming(c) { try { localStorage.setItem(TIMING_KEY, JSON.stringify(c)); } catch (e) {} }
+function recordTime(frames, ms) {
+const c = loadTiming();
+const k = String(frames);
+if (!c[k]) c[k] = [];
+c[k].push(ms);
+if (c[k].length > 10) c[k] = c[k].slice(-10);
+saveTiming(c);
+updateTimingDisplay();
+}
+function estimateTime(frames) {
+const c = loadTiming();
+const s = c[String(frames)];
+if (s && s.length > 0) {
+const sorted = s.slice().sort(function(a, b) { return a - b; });
+const mid = Math.floor(sorted.length / 2);
+return sorted.length % 2 === 0 ? (sorted[mid-1] + sorted[mid]) / 2 : sorted[mid];
+}
+return 30000 + frames * 500;
+}
+function updateTimingDisplay() {
+const c = loadTiming();
+const all = Object.values(c).flat();
+const speedEl = document.getElementById('stat-speed');
+const samplesEl = document.getElementById('stat-samples');
+if (!speedEl || !samplesEl) return;
+if (all.length === 0) { speedEl.textContent = 'en attente'; samplesEl.textContent = '0 génération'; return; }
+const avg = all.reduce(function(a, b) { return a + b; }, 0) / all.length;
+speedEl.textContent = (avg / 1000).toFixed(1) + ' s en moyenne';
+samplesEl.textContent = all.length + ' génération' + (all.length > 1 ? 's' : '');
+  }
+  const PRESETS = [
+{ label: '🌬️ Vent léger', text: 'Anime doucement l\'image comme si le temps s\'arrêtait. Un vent léger fait bouger les cheveux. La lumière est chaude et dorée. Garde chaque sujet identique à la photo.' },
+{ label: '💭 Rêve éveillé', text: 'Prolonge cette image dans un rêve éveillé. Mouvements très lents, respiration visible, lumière douce. Le sujet reste identique.' },
+{ label: '🌅 Golden hour', text: 'Anime cette image avec une lumière dorée de fin de journée. Ombres chaudes, reflets lumineux, ambiance cinématographique. Sujet identique.' },
+{ label: '🌙 Nuit calme', text: 'Prolonge cette image dans une ambiance nocturne paisible. Lumière bleutée, reflets argentés, mouvement très lent. Sujet identique.' },
+{ label: '⚫ Noir & blanc', text: 'Anime cette image en noir et blanc élégant. Contraste doux, grain subtil, ambiance classique. Sujet identique.' },
+{ label: '🎬 Cinématique', text: 'Anime cette image avec une esthétique cinématographique. Mouvement de caméra lent, lumière dramatique. Sujet identique.' },
+{ label: '🌫️ Brume poétique', text: 'Prolonge cette image dans une brume douce et poétique. Halo lumineux, particules flottantes, atmosphère mystérieuse. Sujet identique.' }
+];
+
+const AMBIANCE = [
+{ id:'cinematic', name:'Cinématique', emoji:'🎬', p:'cinematic film look, dramatic lighting, subtle film grain, shallow depth of field. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'golden', name:'Golden Hour', emoji:'🌅', p:'golden hour warm sunlight, soft amber glow, long shadows. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'bw', name:'Noir & Blanc', emoji:'⚫', p:'elegant black and white, high contrast monochrome, deep blacks. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'pastel', name:'Pastel Rêveur', emoji:'🌸', p:'soft pastel palette, dreamy diffused light, ethereal glow. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'neon', name:'Néon Urbain', emoji:'🌆', p:'neon-soaked night, colorful reflections, magenta and cyan accents. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'vintage', name:'Vintage Super 8', emoji:'📽️', p:'vintage Super 8 film, grainy texture, subtle vignette, warm faded colors. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'contrast', name:'Contraste Dramatique', emoji:'🌓', p:'high contrast dramatic lighting, deep shadows, bright highlights. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'mist', name:'Brume Mystique', emoji:'🌫️', p:'atmospheric mist, soft haze, diffused glowing light, mystical fog. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'chiaro', name:'Chiaroscuro', emoji:'🕯️', p:'chiaroscuro painting lighting, single warm light source, deep shadows. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'moon', name:'Clair de Lune', emoji:'🌙', p:'cool moonlight, blue and silver tones, soft lunar glow, peaceful night. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'dawn', name:'Aube Douce', emoji:'🌄', p:'dawn light, soft pink and pale blue sky tones, gentle awakening. Preserve the exact subject identity, face, pose, and clothing.' },
+{ id:'tropical', name:'Tropical Saturé', emoji:'🌴', p:'vibrant tropical colors, saturated warm palette, lush green and turquoise. Preserve the exact subject identity, face, pose, and clothing.' }
+];
+const STYLIZE = [
+{ id:'simpson', name:'Les Simpson', emoji:'🍩', p:'The Simpsons cartoon style, yellow-skinned characters, thick black outlines, flat saturated colors, Matt Groening art style. Transform the entire image into this cartoon style.' },
+{ id:'ghibli', name:'Studio Ghibli', emoji:'🌿', p:'Studio Ghibli anime style, hand-painted watercolor backgrounds, cel-shaded characters, Miyazaki aesthetic. Transform the entire image into this anime style.' },
+{ id:'manga', name:'Manga N&B', emoji:'🖤', p:'black and white Japanese manga style, stark ink outlines, dramatic screentones. Transform the entire image into this manga style.' },
+{ id:'polar', name:'Polar / Film Noir', emoji:'🕵️', p:'classic film noir, high contrast black and white, 1940s detective atmosphere, chiaroscuro. Transform the entire image into this noir style.' },
+{ id:'cyber', name:'Cyberpunk', emoji:'🌃', p:'cyberpunk futuristic, neon pink and cyan lighting, holographic, Blade Runner atmosphere. Transform the entire image into this cyberpunk style.' },
+{ id:'pixar', name:'Pixar 3D', emoji:'✨', p:'high-quality 3D computer animation, Pixar-style rendering, subsurface scattering. Transform the entire image into this 3D style.' },
+{ id:'bd', name:'BD franco-belge', emoji:'📘', p:'Franco-Belgian bande dessinée, ligne claire, clean ink outlines, flat vivid colors. Transform the entire image into this comic style.' },
+{ id:'watercolor', name:'Aquarelle', emoji:'🎨', p:'dreamy watercolor painting, soft bleeding edges, translucent washes. Transform the entire image into this watercolor style.' },
+{ id:'oil', name:'Peinture à l\'huile', emoji:'🖼️', p:'classical oil painting, impasto brushstrokes, dramatic chiaroscuro. Transform the entire image into this oil style.' },
+{ id:'clay', name:'Claymation', emoji:'🧱', p:'claymation stop-motion animation, plasticine texture, fingerprint details. Transform the entire image into this claymation style.' },
+{ id:'vapor', name:'Vaporwave', emoji:'🌴', p:'vaporwave aesthetic, nostalgic 90s imagery, pastel gradient, VHS quality. Transform the entire image into this vaporwave style.' },
+{ id:'surreal', name:'Surréaliste', emoji:'🌀', p:'surrealist aesthetic, impossible juxtapositions, dreamlike distortions, Salvador Dali. Transform the entire image into this surrealist style.' }
+];
+  const ACTIONS = [
+'the subject slowly raises a hand toward the camera',
+'a single tear rolls down the subject\'s cheek in slow motion',
+'the subject turns their head slowly, eyes closing',
+'the subject\'s hair moves gently in a soft breeze',
+'the subject stands still, only chest rising and falling with breath',
+'the subject\'s eyes open slowly, intense gaze at the camera',
+'the subject extends a hand, reaching for something out of frame',
+'the subject walks slowly toward the camera, each step deliberate',
+'the subject looks down at their own hands',
+'the subject\'s body shivers involuntarily',
+'the subject leans forward slightly, closing the distance',
+'the subject lifts their chin slightly'
+];
+
+const CAMERAS = [
+'slow dolly-in, camera gliding forward',
+'static locked-off frame',
+'handheld, slight tremor, camera breathing',
+'slow pan following the subject',
+'subtle parallax movement',
+'high angle looking down',
+'low angle looking up',
+'rack focus from foreground to subject',
+'camera drifts backward slowly'
+];
+
+const LIGHTS = [
+'soft diffused natural light',
+'warm golden hour backlight',
+'dramatic side lighting with deep shadows',
+'gentle ambient glow',
+'cool moonlight atmosphere',
+'warm interior candlelight',
+'cinematic rim lighting'
+];
+
+const INTENSITY = { subtle:'very subtle movement, gentle and quiet', moderate:'moderate movement, controlled', strong:'strong dynamic movement, energetic' };
+const FRAMING = { close:'extreme close-up, intimate and intense', medium:'medium shot, waist up', wide:'wide shot with environment visible' };
+
+const state = {
+images: [],
+isRunning: false,
+stopRequested: false,
+queue: [],
+completed: 0,
+failed: 0,
+effect: null,
+prompt: '',
+framing: 'random',
+intensity: 'random',
+duration: 153,
+loading: false,
+sinceError: 0
+};
+  
+  function getKey() { try { return (localStorage.getItem(API_KEY_STORAGE) || '').trim(); } catch (e) { return ''; } }
+
+function saveKey() {
+const input = document.getElementById('api-key-input');
+const key = input.value.trim();
+if (!key) {
+try { localStorage.removeItem(API_KEY_STORAGE); } catch (e) {}
+updatePanel();
+showToast('Clé supprimée', 'warn');
+return;
+}
+if (!key.startsWith('sk-') && !confirm('La clé ne commence pas par "sk-". Sauvegarder quand même ?')) return;
+try {
+localStorage.setItem(API_KEY_STORAGE, key);
+updatePanel();
+showToast('Clé API enregistrée ✓', 'success');
+input.blur();
+} catch (e) { showToast('Erreur sauvegarde', 'error'); }
+}
+
+function updatePanel() {
+const key = getKey();
+const panel = document.getElementById('api-panel');
+const line = document.getElementById('api-status-line');
+const txt = document.getElementById('api-status-text');
+const input = document.getElementById('api-key-input');
+if (key) {
+panel.classList.add('ok');
+line.classList.add('ok');
+txt.textContent = 'Clé active · ' + key.slice(0, 8) + '…' + key.slice(-4);
+input.value = key;
+input.placeholder = '';
+} else {
+panel.classList.remove('ok');
+line.classList.remove('ok');
+txt.textContent = 'Aucune clé API enregistrée';
+input.value = '';
+input.placeholder = 'Collez votre clé API ici (sk-...)';
+}
+updateBtn();
+}
+
+function updateBtn() {
+const btn = document.getElementById('generate-btn');
+if (!btn) return;
+const has = state.images.length > 0 && !!getKey() && !state.isRunning && !state.loading;
+btn.disabled = !has;
+if (state.loading) btn.textContent = 'Chargement…';
+else if (state.isRunning) btn.textContent = 'Création… (' + (state.completed + state.failed) + '/' + state.queue.length + ')';
+else if (!getKey()) btn.textContent = 'Ajoutez votre clé API';
+else if (!state.images.length) btn.textContent = 'Ajoutez des images';
+else btn.textContent = 'Créer ' + state.images.length + ' vidéo' + (state.images.length > 1 ? 's' : '');
+}
+
+function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+function log(m) { console.log('[Atelier] ' + m); }
+function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
+function setStatus(t) {
+const bar = document.getElementById('status-bar');
+const el = document.getElementById('status-text');
+if (t) { bar.classList.add('visible'); el.textContent = t; }
+else bar.classList.remove('visible');
+}
+function fmtEta(s) {
+if (s < 60) return Math.round(s) + 's';
+return Math.floor(s / 60) + 'm' + (Math.round(s % 60) > 0 ? ' ' + Math.round(s % 60) + 's' : '');
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function fileToDataUri(file) {
+return new Promise(function(resolve, reject) {
+const r = new FileReader();
+r.onload = function(e) { resolve(e.target.result); };
+r.onerror = function() { reject(new Error('Erreur')); };
+r.readAsDataURL(file);
+});
+}
+
+function makeThumb(dataUri) {
+return new Promise(function(resolve) {
+const img = new Image();
+img.onload = function() {
+try {
+const c = document.createElement('canvas');
+const ratio = img.height / img.width;
+c.width = THUMB_WIDTH;
+c.height = Math.round(THUMB_WIDTH * ratio);
+const ctx = c.getContext('2d');
+ctx.drawImage(img, 0, 0, c.width, c.height);
+resolve(c.toDataURL('image/jpeg', 0.7));
+} catch (e) { resolve(dataUri); }
+};
+img.onerror = function() { resolve(dataUri); };
+img.src = dataUri;
+});
+}
+
+async function processFile(file) {
+if (!file.type.startsWith('image/')) return null;
+if (file.size > MAX_IMAGE_SIZE) return null;
+try {
+const dataUri = await fileToDataUri(file);
+const thumbnail = await makeThumb(dataUri);
+return { file: file, dataUri: dataUri, thumbnail: thumbnail, id: Date.now() + Math.random() };
+} catch (e) { return null; }
+}
+
+async function handleFiles(files) {
+const list = Array.from(files).filter(function(f) { return f.type.startsWith('image/'); });
+if (!list.length) return;
+state.loading = true;
+updateBtn();
+setStatus('Chargement des images…');
+const BATCH = 5;
+let processed = 0;
+for (let i = 0; i < list.length; i += BATCH) {
+const batch = list.slice(i, i + BATCH);
+const results = await Promise.allSettled(batch.map(function(f) { return processFile(f); }));
+results.forEach(function(r) {
+if (r.status === 'fulfilled' && r.value) { state.images.push(r.value); processed++; }
+});
+renderImages();
+setStatus('Chargement… ' + processed + '/' + list.length);
+}
+state.loading = false;
+setStatus(null);
+updateBtn();
+}
+
+function removeImage(id) {
+state.images = state.images.filter(function(i) { return i.id !== id; });
+renderImages();
+}
+
+function renderImages() {
+const grid = document.getElementById('images-grid');
+grid.innerHTML = state.images.map(function(img) {
+return '<div class="image-card"><img src="' + (img.thumbnail || img.dataUri) + '" alt=""><button class="remove-btn" data-remove="' + img.id + '">✕</button></div>';
+}).join('');
+grid.querySelectorAll('[data-remove]').forEach(function(btn) {
+btn.addEventListener('click', function(e) {
+e.stopPropagation();
+removeImage(parseFloat(btn.dataset.remove));
+});
+});
+  }
+  function renderPresets() {
+const c = document.getElementById('presets');
+c.innerHTML = PRESETS.map(function(p, i) { return '<div class="preset" data-p="' + i + '">' + esc(p.label) + '</div>'; }).join('');
+c.querySelectorAll('.preset').forEach(function(el) {
+el.addEventListener('click', function() {
+const p = PRESETS[parseInt(el.dataset.p, 10)];
+if (!p) return;
+const ta = document.getElementById('main-prompt');
+ta.value = p.text;
+state.prompt = p.text;
+ta.focus();
+showToast('Exemple appliqué', 'success', 1200);
+});
+});
+}
+
+function renderStyles() {
+const c = document.getElementById('styles-grid');
+let html = '';
+html += '<div class="no-effect ' + (state.effect === null ? 'selected' : '') + '" data-id="none">' + (state.effect === null ? '✓ Aucun effet — votre prompt seul gère les vidéos' : '🚫 Aucun effet visuel') + '</div>';
+html += '<div class="cat-header">✨ Effets d\'ambiance</div>';
+html += '<div class="cat-desc">Ces effets préservent votre image. Seule l\'ambiance change.</div>';
+html += AMBIANCE.map(function(s) {
+return '<div class="style-card ' + (state.effect === s.id ? 'selected' : '') + '" data-id="' + s.id + '"><div class="style-emoji">' + s.emoji + '</div><div><div class="style-name">' + esc(s.name) + '</div></div></div>';
+}).join('');
+html += '<div class="cat-header">🎭 Transformations stylistiques</div>';
+html += '<div class="cat-desc">Ces effets transforment radicalement votre image.</div>';
+html += STYLIZE.map(function(s) {
+return '<div class="style-card ' + (state.effect === s.id ? 'selected' : '') + '" data-id="' + s.id + '"><div class="style-emoji">' + s.emoji + '</div><div><div class="style-name">' + esc(s.name) + '</div></div></div>';
+}).join('');
+c.innerHTML = html;
+c.querySelectorAll('[data-id]').forEach(function(el) {
+el.addEventListener('click', function() {
+const v = el.dataset.id;
+state.effect = (v === 'none') ? null : v;
+renderStyles();
+});
+});
+}
+  function buildPrompt() {
+const all = AMBIANCE.concat(STYLIZE);
+const eff = state.effect ? all.find(function(s) { return s.id === state.effect; }) : null;
+const stylize = eff && STYLIZE.some(function(s) { return s.id === state.effect; });
+const hasPrompt = state.prompt && state.prompt.trim().length > 0;
+const parts = [];
+if (stylize) {
+parts.push('Animate this image as the starting frame. Transform the entire image into the following artistic style:');
+} else {
+parts.push('Animate this exact image as the starting frame. The subject must remain IDENTICAL to the input image: same face, same expression, same clothing, same pose, same identity. This is a CONTINUATION of the source image, not a re-imagination. Preserve the exact composition, framing, and layout of the original image. The camera does NOT change the subject. Only subtle motion, breathing, light, and atmosphere are animated.');
+}
+if (eff) {
+parts.push(eff.p);
+if (stylize) parts.push('Maintain the same subject, pose, and composition as the source image, but reinterpret everything in this new style.');
+}
+if (hasPrompt) {
+if (stylize) parts.push('Additional artistic direction (applied on top of the style): ' + state.prompt.trim());
+else parts.push('Artistic direction (highest priority, must not change the subject identity or composition): ' + state.prompt.trim());
+}
+if (state.framing !== 'random' && FRAMING[state.framing]) parts.push(FRAMING[state.framing]);
+if (state.intensity !== 'random' && INTENSITY[state.intensity]) parts.push(INTENSITY[state.intensity]);
+else parts.push('moderate movement, clear but controlled motion');
+parts.push(rand(ACTIONS));
+parts.push(rand(CAMERAS));
+parts.push(rand(LIGHTS));
+parts.push('Sound design: minimal foley, soft ambient textures, no music, no instruments, no dialogue');
+parts.push('Portrait orientation 9:16 vertical, 24fps, no text, no subtitles, no watermarks, consistent character design with the source image');
+return parts.join('. ');
+  }
+  async function apiFetch(url, options, label) {
+options = options || {};
+label = label || 'API';
+for (let attempt = 0; attempt < 7; attempt++) {
+if (state.stopRequested) throw new Error('Arrêt demandé');
+try {
+const res = await fetch(url, options);
+if (res.status === 429) {
+state.sinceError = 0;
+if (createIntervalMs < INTERVAL_SAFE) {
+createIntervalMs = Math.min(createIntervalMs + 8000, INTERVAL_MAX);
+log('429 → intervalle ' + (createIntervalMs / 1000) + 's');
+}
+const wait = [15, 30, 45, 60, 90, 120, 180][Math.min(attempt, 6)];
+log(label + ' : 429, attente ' + wait + 's');
+setStatus('L\'IA se prépare… (' + wait + 's)');
+await sleep(wait * 1000);
+continue;
+}
+if (res.status === 503) {
+const wait = [5, 10, 15, 20, 30, 45][Math.min(attempt, 5)];
+setStatus('Votre vidéo se prépare… (' + wait + 's)');
+await sleep(wait * 1000);
+continue;
+}
+if (res.ok && createIntervalMs > INTERVAL_MIN) {
+state.sinceError++;
+if (state.sinceError >= 3) {
+createIntervalMs = Math.max(createIntervalMs - 4000, INTERVAL_MIN);
+state.sinceError = 0;
+}
+}
+return res;
+} catch (e) {
+if (e.message === 'Arrêt demandé') throw e;
+const wait = [3, 5, 8, 12, 20, 30][Math.min(attempt, 5)];
+setStatus('Connexion… (' + wait + 's)');
+await sleep(wait * 1000);
+}
+}
+return fetch(url, options);
+}
+
+async function createTask(imageDataUri, prompt) {
+const body = { model: MODEL_VIDEO, prompt: prompt, image: imageDataUri, num_frames: state.duration, frame_rate: FRAME_RATE };
+const res = await apiFetch(API_BASE + '/videos', {
+method: 'POST',
+headers: { 'Authorization': 'Bearer ' + getKey(), 'Content-Type': 'application/json' },
+body: JSON.stringify(body)
+}, 'Création');
+if (!res.ok) {
+const err = await res.text();
+throw new Error('HTTP ' + res.status + ' — ' + err.slice(0, 200));
+}
+const data = await res.json();
+const id = data.video_id || data.id || data.task_id;
+if (!id) throw new Error('Pas de video_id');
+return id;
+  }
+ async function pollTask(videoId, onProgress) {
+const estimateMs = estimateTime(state.duration);
+const estimateSec = estimateMs / 1000;
+let remaining = Math.max(20, Math.floor(estimateSec * 0.8));
+while (remaining > 0) {
+if (state.stopRequested) throw new Error('Arrêt demandé');
+onProgress('Votre vidéo se prépare… — ' + remaining + 's');
+await sleep(1000);
+remaining--;
+}
+for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
+if (state.stopRequested) throw new Error('Arrêt demandé');
+if (attempt > 0) {
+let r = POLL_INTERVAL_SEC;
+while (r > 0) {
+if (state.stopRequested) throw new Error('Arrêt demandé');
+onProgress('L\'image prend vie… — ' + r + 's');
+await sleep(1000);
+r--;
+}
+}
+const url = POLL_BASE + '?video_id=' + encodeURIComponent(videoId) + '&model_name=' + encodeURIComponent(MODEL_VIDEO);
+const res = await apiFetch(url, { method: 'GET', headers: { 'Authorization': 'Bearer ' + getKey() } }, 'Polling');
+const d = await res.json();
+const status = d.status || 'unknown';
+const progress = d.progress || 0;
+onProgress('Création… — ' + progress + '%');
+if (status === 'completed' || status === 'succeeded' || status === 'done') {
+const u = (d.metadata && d.metadata.url) || d.url || (d.output && d.output.url);
+if (!u) throw new Error('Pas d\'URL finale');
+return u;
+}
+if (status === 'failed' || status === 'error' || status === 'cancelled') throw new Error('Échec (' + status + ')');
+}
+throw new Error('Timeout');
+}
+
+function renderQueue() {
+const el = document.getElementById('queue');
+if (!state.queue.length) { el.innerHTML = ''; return; }
+const total = state.queue.length;
+const done = state.completed + state.failed;
+const inProg = state.queue.filter(function(q) { return q.status === 'processing'; }).length;
+const pending = total - done - inProg;
+const estGen = estimateTime(state.duration) / 1000;
+const eta = pending > 0 ? (pending * (createIntervalMs / 1000)) + estGen : (inProg * estGen / Math.max(inProg, 1));
+let html = '<div class="queue-summary"><span style="font-weight:600;">Progression : ' + done + '/' + total + '</span><span style="color:#777;">' + (done < total ? '≈ ' + fmtEta(eta) + ' restant' : 'Terminé') + '</span></div>';
+const visible = state.queue.slice(0, MAX_VISIBLE_QUEUE);
+const hidden = state.queue.length - visible.length;
+html += visible.map(function(item) {
+let icon = '○', statusText = 'En attente', cls = 'pending';
+if (item.status === 'creating') { icon = '◐'; statusText = 'Préparation…'; cls = 'creating'; }
+else if (item.status === 'processing') { icon = '◐'; statusText = item.progress || 'En cours…'; cls = 'processing'; }
+else if (item.status === 'done') { icon = '●'; statusText = 'Terminé'; cls = 'done'; }
+else if (item.status === 'failed') { icon = '✕'; statusText = 'Échec'; cls = 'failed'; }
+return '<div class="queue-item ' + cls + '"><div class="q-icon">' + icon + '</div><div class="q-name">Image ' + (item.imageIndex + 1) + '</div><div class="q-status">' + esc(statusText) + '</div></div>';
+}).join('');
+if (hidden > 0) html += '<div class="queue-more">… et ' + hidden + ' autre' + (hidden > 1 ? 's' : '') + ' image' + (hidden > 1 ? 's' : '') + '</div>';
+el.innerHTML = html;
+}
+  function addGallery(url, label) {
+const g = document.getElementById('gallery');
+const grid = document.getElementById('gallery-grid');
+g.style.display = 'block';
+const el = document.createElement('div');
+el.className = 'gallery-item';
+el.innerHTML = '<video controls preload="metadata" muted playsinline><source src="' + url + '" type="video/mp4"></video><div class="g-caption">' + esc(label) + '</div>';
+grid.appendChild(el);
+}
+
+async function createAndTrack(item) {
+item.status = 'creating';
+item.progress = 'Préparation…';
+renderQueue();
+const prompt = buildPrompt();
+item.prompt = prompt;
+log('[Image ' + (item.imageIndex + 1) + '] Création…');
+const id = await createTask(item.image.dataUri, prompt);
+item.videoId = id;
+item.startTime = Date.now();
+item.status = 'processing';
+item.progress = 'En cours…';
+renderQueue();
+return id;
+}
+
+async function pollAndDisplay(item) {
+try {
+const url = await pollTask(item.videoId, function(prog) { item.progress = prog; renderQueue(); });
+const elapsed = Date.now() - item.startTime;
+recordTime(state.duration, elapsed);
+log('[Image ' + (item.imageIndex + 1) + '] Terminée en ' + (elapsed / 1000).toFixed(1) + 's');
+item.status = 'done';
+item.videoUrl = url;
+item.progress = 'Terminé';
+state.completed++;
+renderQueue();
+updateBtn();
+addGallery(url, 'Image ' + (item.imageIndex + 1));
+} catch (e) {
+if (e.message === 'Arrêt demandé') { item.status = 'failed'; item.progress = 'Arrêté'; }
+else { item.status = 'failed'; item.progress = 'Échec'; state.failed++; }
+renderQueue();
+updateBtn();
+}
+}
+
+async function start() {
+if (state.isRunning || !state.images.length) return;
+if (!getKey()) { showToast('Ajoutez votre clé API', 'error'); document.getElementById('api-key-input').focus(); return; }
+state.prompt = document.getElementById('main-prompt').value.trim();
+if (!state.prompt && !state.effect) {
+if (!confirm('Ni prompt ni effet. Continuer avec style aléatoire ?')) return;
+}
+state.isRunning = true;
+state.stopRequested = false;
+state.completed = 0;
+state.failed = 0;
+state.sinceError = 0;
+createIntervalMs = INTERVAL_MIN;
+state.queue = state.images.map(function(img, i) {
+return { imageIndex: i, image: img, status: 'pending', progress: null, videoId: null, videoUrl: null, prompt: null, startTime: null };
+});
+document.getElementById('gallery-grid').innerHTML = '';
+document.getElementById('gallery').style.display = 'none';
+document.getElementById('stop-btn').style.display = 'block';
+document.getElementById('generate-btn').disabled = true;
+if (wakeEnabled && !wakeLockSentinel && !canvasStream) await startWakeLock();
+renderQueue();
+const polling = [];
+try {
+for (let i = 0; i < state.queue.length; i++) {
+if (state.stopRequested) break;
+const item = state.queue[i];
+try {
+await createAndTrack(item);
+polling.push(pollAndDisplay(item));
+} catch (e) {
+if (e.message === 'Arrêt demandé') break;
+item.status = 'failed'; item.progress = 'Échec'; state.failed++;
+renderQueue(); updateBtn();
+}
+if (i < state.queue.length - 1 && !state.stopRequested) {
+const wait = Math.ceil(createIntervalMs / 1000);
+for (let r = wait; r > 0; r--) {
+if (state.stopRequested) break;
+setStatus('Respiration… Image ' + (i + 2) + '/' + state.queue.length + ' dans ' + r + 's');
+await sleep(1000);
+}
+}
+}
+if (polling.length > 0) { setStatus('Finalisation…'); await Promise.allSettled(polling); }
+} catch (e) { log('Erreur : ' + e.message); }
+const summary = state.stopRequested ? 'Arrêté — ' + state.completed + '/' + state.queue.length : '✦ ' + state.completed + '/' + state.queue.length + ' vidéos créées ✦';
+setStatus(summary);
+await sleep(4000);
+setStatus(null);
+state.isRunning = false;
+state.stopRequested = false;
+document.getElementById('stop-btn').style.display = 'none';
+updateBtn();
+showToast(state.completed + ' vidéo' + (state.completed > 1 ? 's' : '') + ' créée' + (state.completed > 1 ? 's' : ''), 'success');
+}
+
+function stop() {
+if (!state.isRunning) return;
+state.stopRequested = true;
+setStatus('Arrêt…');
+  }
+ (function init() {
+const saveBtn = document.getElementById('api-save-btn');
+if (saveBtn) saveBtn.addEventListener('click', saveKey);
+const stopBtn = document.getElementById('stop-btn');
+if (stopBtn) stopBtn.addEventListener('click', stop);
+const apiInput = document.getElementById('api-key-input');
+if (apiInput) apiInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); saveKey(); } });
+const upload = document.getElementById('upload-zone');
+const file = document.getElementById('file-input');
+if (upload && file) {
+upload.addEventListener('click', function() { file.click(); });
+file.addEventListener('change', function(e) { handleFiles(e.target.files); file.value = ''; });
+}
+const promptEl = document.getElementById('main-prompt');
+if (promptEl) promptEl.addEventListener('input', function(e) { state.prompt = e.target.value; });
+const dur = document.getElementById('duration-select');
+if (dur) dur.addEventListener('change', function(e) { state.duration = parseInt(e.target.value, 10); });
+const fr = document.getElementById('framing-select');
+if (fr) fr.addEventListener('change', function(e) { state.framing = e.target.value; });
+const inten = document.getElementById('intensity-select');
+if (inten) inten.addEventListener('change', function(e) { state.intensity = e.target.value; });
+const genBtn = document.getElementById('generate-btn');
+if (genBtn) genBtn.addEventListener('click', start);
+const wakeBtn = document.getElementById('wake-btn');
+if (wakeBtn) wakeBtn.addEventListener('click', toggleWake);
+try { wakeEnabled = localStorage.getItem(WAKE_PREF) === '1'; } catch (e) {}
+if (wakeEnabled) startWakeLock().then(updateWakeUI);
+updatePanel();
+updateTimingDisplay();
+updateWakeUI();
+renderPresets();
+renderStyles();
+renderImages();
+renderQueue();
+log('Prêt.');
+})();
+</script>
+</body>
+</html> 
